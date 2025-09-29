@@ -1,0 +1,100 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia de Chile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #003087;
+            color: white;
+            text-align: center;
+            padding: 2em;
+        }
+        section {
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 1em;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1em auto;
+        }
+        h2 {
+            color: #003087;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Historia de Chile</h1>
+    </header>
+
+    <section id="periodo-colonial">
+        <h2>Período Colonial</h2>
+        <p>El período colonial en Chile comenzó en 1541 con la llegada de Pedro de Valdivia, quien fundó Santiago. Durante este tiempo, los españoles establecieron un sistema de encomiendas y enfrentaron la resistencia de los pueblos indígenas, como los mapuches.</p>
+        <img src="images/historia1.jpg" alt="Ilustración del período colonial en Chile">
+    </section>
+
+    <section id="independencia">
+        <h2>Independencia</h2>
+        <p>La independencia de Chile se gestó a partir de 1810 con la Primera Junta de Gobierno. Liderada por figuras como Bernardo O'Higgins, Chile logró su independencia definitiva tras la batalla de Maipú en 1818.</p>
+        <img src="images/historia2.jpg" alt="Batalla de la Independencia de Chile">
+    </section>
+
+    <section id="siglo-xx">
+        <h2>Siglo XX</h2>
+        <p>El siglo XX estuvo marcado por cambios políticos y sociales, incluyendo la presidencia de Salvador Allende y el golpe de Estado de 1973. Chile transitó hacia la democracia en 1990, consolidando su desarrollo moderno.</p>
+        <img src="images/historia3.jpg" alt="Chile en el siglo XX">
+    </section>
+</body>
+</html>
